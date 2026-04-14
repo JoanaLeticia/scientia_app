@@ -1,0 +1,540 @@
+import 'package:flutter/material.dart';
+import 'package:scientia_app/screens/perfil_screen.dart';
+import 'package:scientia_app/screens/aulas_screen.dart';
+import 'package:scientia_app/screens/wishlist_screen.dart';
+import '../database/db_helper.dart';
+import '../models/professor.dart';
+import 'notificacoes_screen.dart';
+import 'detalhes_professor_screen.dart';
+import 'pesquisa_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Professor> _listaProfessores = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _atualizarLista();
+  }
+
+  Future<void> _atualizarLista() async {
+    final dados = await DBHelper.getAll();
+    setState(() => _listaProfessores = dados);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          "Bem-vinda,",
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                        Text(
+                          "Joana Letícia",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificacoesScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE0EDFF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.notifications_none,
+                          color: Color(0xFF0066F5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Pesquisar professores...",
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF0066F5),
+                      size: 26,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // SEÇAO DE PROFESSORES DESTAQUES
+              SizedBox(
+                height: 224,
+                child: _listaProfessores.isEmpty
+                    ? const Center(child: Text("Carregando destaques..."))
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        itemCount: _listaProfessores.length,
+                        itemBuilder: (context, index) {
+                          final prof = _listaProfessores[index];
+                          return _buildDestaqueCard(
+                            prof.disciplina,
+                            prof.valor.toStringAsFixed(0),
+                            prof.imagemUrl.isNotEmpty
+                                ? prof.imagemUrl
+                                : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 20),
+
+              // SEÇÃO DISCIPLINAS
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.0),
+                child: Text(
+                  "Disciplinas",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCategoriaIcon(Icons.calculate, "Matemática"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.menu_book, "Português"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.create, "Redação"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.functions, "Física"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.science, "Química"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.eco, "Biologia"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.account_balance, "História"),
+                    const SizedBox(width: 12),
+                    _buildCategoriaIcon(Icons.public, "Geografia"),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // SEÇÃO PROFESSORES DISPONÍVEIS
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: const [
+                    Text(
+                      "Professores Disponíveis",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "Ver todos",
+                      style: TextStyle(
+                        color: Color(0xFF0066F5),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: _listaProfessores.length,
+                  itemBuilder: (context, index) {
+                    final prof = _listaProfessores[index];
+                    return _buildProfessorCard(prof);
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+
+      bottomNavigationBar: Container(
+        height: 95,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              spreadRadius: 2,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: Color(0xFF0066F5),
+            unselectedItemColor: Colors.grey,
+            iconSize: 28,
+            selectedFontSize: 12,
+            unselectedFontSize: 12,
+            currentIndex: 0,
+            onTap: (index) {
+              if (index == 1) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PesquisaScreen(),
+                  ),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WishlistScreen(),
+                  ),
+                );
+              } else if (index == 3) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AulasScreen()),
+                );
+              } else if (index == 4) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PerfilScreen()),
+                );
+              }
+            },
+
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                label: "Pesquisar",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.favorite_border),
+                label: "Wishlist",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_today),
+                label: "Aulas",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                label: "Perfil",
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDestaqueCard(String disciplina, String preco, String imageUrl) {
+    return Container(
+      width: 145,
+      margin: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.only(left: 10, top: 10, right: 10, bottom: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              imageUrl,
+              width: 125,
+              height: 155,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 155,
+                width: 125,
+                color: Colors.grey.shade200,
+                child: const Icon(Icons.person, color: Colors.grey, size: 40),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 3, top: 7),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  disciplina,
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 1),
+
+                RichText(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    children: [
+                      TextSpan(
+                        text: 'R\$$preco',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const TextSpan(text: '/hora'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoriaIcon(IconData icon, String titulo) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Color(0xFFE0EDFF),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Color(0xFF0066F5), size: 30),
+        ),
+        const SizedBox(height: 8),
+        Text(titulo, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildProfessorCard(Professor prof) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetalhesProfessorScreen(professor: prof),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    prof.imagemUrl.isNotEmpty
+                        ? prof.imagemUrl
+                        : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80",
+                    height: 130,
+                    width: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 130,
+                        width: 100,
+                        color: Colors.grey.shade200,
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.grey,
+                          size: 40,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await DBHelper.toggleFavorito(prof.id!, prof.isFavorito);
+
+                      _atualizarLista();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        prof.isFavorito == 1
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: const Color(0xFF0066F5),
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    prof.nome,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        prof.disciplina,
+                        style: TextStyle(
+                          color: Colors.grey.shade800,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      Text(
+                        prof.cidadeEstado,
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  RichText(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'R\$${prof.valor.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const TextSpan(text: '/hora'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                DetalhesProfessorScreen(professor: prof),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0066F5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Contratar",
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
