@@ -70,6 +70,8 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
       ordem: _ordemSelecionada,
       filtrosAvancados: _filtrosAplicados,
     );
+    // EXPLICAÇÃO: Gerência de Estado
+    // Sempre que há uma ação de alterar dados será invocado esse método setState, que é responsável por notificar o Flutter que os dados foram alterados e a interface precisa ser reconstruída para refletir as mudanças.
     setState(() => _listaProfessores = dados);
   }
 
@@ -337,6 +339,8 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
   Widget _buildPesquisaCard(Professor prof) {
     return GestureDetector(
       onTap: () async{
+        // EXPLICAÇÃO: Navegação entre telas
+        // Ao clicar em um professor, navegamos para a tela de detalhes daquele professor, passando o objeto "professor" como argumento.
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -362,9 +366,7 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    prof.imagemUrl.isNotEmpty
-                        ? prof.imagemUrl
-                        : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
+                    prof.imagemUrl,
                     height: 140,
                     width: 100,
                     fit: BoxFit.cover,
@@ -372,6 +374,11 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
                       height: 140,
                       width: 100,
                       color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),

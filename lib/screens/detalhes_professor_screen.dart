@@ -82,9 +82,7 @@ class _DetalhesProfessorScreenState extends State<DetalhesProfessorScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: Image.network(
-                  widget.professor.imagemUrl.isNotEmpty
-                      ? widget.professor.imagemUrl
-                      : 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
+                  widget.professor.imagemUrl,
                   height: 280,
                   width: double.infinity,
                   fit: BoxFit.cover,

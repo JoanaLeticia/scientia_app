@@ -163,6 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(color: Colors.grey),
                         ),
                       )
+                      // EXPLICAÇÃO: Uso de Carrossel
+                      // Carrossel de professores destaque é um construtor de lista configurado com eixo de rolagem na horizontal
                     : ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -226,7 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // 🌟 MUDANÇA: Adicionado GestureDetector para navegação
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
@@ -377,15 +378,12 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🌟 STACK: Imagem + Coração de Favorito
             Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    prof.imagemUrl.isNotEmpty
-                        ? prof.imagemUrl
-                        : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+                    prof.imagemUrl,
                     width: 125,
                     height: 155,
                     fit: BoxFit.cover,
@@ -523,15 +521,17 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Stack(
               children: [
+                // EXPLICAÇÃO: Uso da Imagem
+                // Para poder aplicar o borderRadius
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
+                  // Renderiza a imagem do professor ou um ícone genérico em caso de erro
                   child: Image.network(
-                    prof.imagemUrl.isNotEmpty
-                        ? prof.imagemUrl
-                        : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80",
+                    prof.imagemUrl,
                     height: 130,
                     width: 100,
                     fit: BoxFit.cover,
+                    // Em caso de erro ao carregar a imagem, exibe um placeholder
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         height: 130,

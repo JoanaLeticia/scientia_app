@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984031374427",
+    "project_id": "scietia-app",
+    "storage_bucket": "scietia-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984031374427:android:7e147aa53db768d478637e",
+        "android_client_info": {
+          "package_name": "com.example.scientia_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDN41rsy83uAXS1sC8vgm6qOYbvt4jRJ3A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

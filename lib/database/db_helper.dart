@@ -11,6 +11,8 @@ class DBHelper {
     return openDatabase(
       path,
       onCreate: (db, version) async {
+
+        // Criando a tabela de professores
         await db.execute(
           'CREATE TABLE professores('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -27,6 +29,7 @@ class DBHelper {
           ')',
         );
 
+        // Criando a tabela de alunos
         await db.execute(
           'CREATE TABLE alunos('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -36,6 +39,7 @@ class DBHelper {
           ')',
         );
 
+        // Criando a tabela de aulas
         await db.execute(
           'CREATE TABLE aulas('
           'id INTEGER PRIMARY KEY AUTOINCREMENT, '
@@ -54,7 +58,7 @@ class DBHelper {
           'cidadeEstado': 'Palmas/TO',
           'modalidade': 'Presencial',
           'imagemUrl':
-              'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=200&q=80',
+              'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=500&q=100',
           'isFavorito': 1,
           'isDestaque': 1,
         });
@@ -68,7 +72,7 @@ class DBHelper {
           'cidadeEstado': 'São Paulo/SP',
           'modalidade': 'Online',
           'imagemUrl':
-              'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
+              'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=500&q=100',
           'isFavorito': 0,
           'isDestaque': 1,
         });
@@ -82,9 +86,77 @@ class DBHelper {
           'cidadeEstado': 'Palmas/TO',
           'modalidade': 'Híbrido',
           'imagemUrl':
-              'https://images.unsplash.com/photo-1580894732444-8ecbef79bd1e?auto=format&fit=crop&w=200&q=80',
+              'https://images.unsplash.com/photo-1580894732444-8ecbef79bd1e?auto=format&fit=crop&w=500&q=100',
           'isFavorito': 0,
           'isDestaque': 1,
+        });
+
+        await db.insert('professores', {
+          'nome': 'Dr. Ricardo Santos',
+          'disciplina': 'História',
+          'valor': 85.00,
+          'descricao': 'Especialista em história brasileira e mundial.',
+          'contato': 'ricardo.santos@email.com',
+          'cidadeEstado': 'Palmas/TO',
+          'modalidade': 'Presencial',
+          'imagemUrl':
+              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=100',
+          'isFavorito': 0,
+          'isDestaque': 1,
+        });
+
+        await db.insert('professores', {
+          'nome': 'Mariana Luz',
+          'disciplina': 'Física',
+          'valor': 70.00,
+          'descricao': 'Aulas dinâmicas com foco em vestibulares e ENEM.',
+          'contato': 'mariana.luz@email.com',
+          'cidadeEstado': 'Remoto',
+          'modalidade': 'Online',
+          'imagemUrl':
+              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=500&q=100',
+          'isFavorito': 1,
+          'isDestaque': 1,
+        });
+
+        await db.insert('professores', {
+          'nome': 'Eng. Carlos Eduardo',
+          'disciplina': 'Química',
+          'valor': 95.00,
+          'descricao': 'Aulas práticas e teóricas para dominar a química.',
+          'contato': 'cadu.quimica@email.com',
+          'cidadeEstado': 'Palmas/TO',
+          'modalidade': 'Híbrido',
+          'imagemUrl':
+              'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=500&q=100',
+          'isFavorito': 0,
+          'isDestaque': 1,
+        });
+
+        await db.insert('professores', {
+          'nome': 'Ana Beatriz',
+          'disciplina': 'Matemática',
+          'valor': 65.00,
+          'descricao': 'Aulas personalizadas para todas as idades e níveis.',
+          'contato': 'ana.beatriz@email.com',
+          'cidadeEstado': 'Remoto',
+          'modalidade': 'Online',
+          'imagemUrl':
+              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=500&q=100',
+          'isFavorito': 0,
+          'isDestaque': 1,
+        });
+
+        await db.insert('aulas', {
+          'professor_id': 1, // ID do Prof. John Doe
+          'data': '10/04/2026', // Data passada
+          'hora': '14:00 - 15:00',
+        });
+
+        await db.insert('aulas', {
+          'professor_id': 2, // ID da Profa. Maria Silva
+          'data': '12/04/2026', // Data passada
+          'hora': '09:00 - 11:00',
         });
       },
       version: 1,

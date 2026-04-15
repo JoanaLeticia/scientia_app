@@ -7,7 +7,6 @@ import 'pesquisa_screen.dart';
 import 'wishlist_screen.dart';
 import 'perfil_screen.dart';
 import 'notificacoes_screen.dart';
-import 'detalhes_professor_screen.dart';
 import 'filtros_screen.dart';
 import 'detalhes_aula_screen.dart';
 
@@ -435,32 +434,42 @@ class _AulasScreenState extends State<AulasScreen> {
   }
 
   Widget _buildAulaCard(Professor prof, String data, String hora) {
+    bool isHistorico = !_isProximasAulas;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isHistorico ? const Color(0xFFF9FAFB) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: isHistorico ? Colors.grey.shade200 : Colors.grey.shade300,
+        ),
       ),
       child: Column(
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  prof.imagemUrl.isNotEmpty
-                      ? prof.imagemUrl
-                      : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
-                  height: 120,
-                  width: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+              Opacity(
+                opacity: isHistorico ? 0.7 : 1.0,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    prof.imagemUrl,
                     height: 120,
                     width: 90,
-                    color: Colors.grey.shade200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      width: 90,
+                      color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -485,15 +494,19 @@ class _AulasScreenState extends State<AulasScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE0EDFF),
+                            color: isHistorico
+                                ? Colors.grey.shade200
+                                : const Color(0xFFE0EDFF),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            prof.modalidade,
-                            style: const TextStyle(
-                              color: Color(0xFF0066F5),
+                            isHistorico ? "CONCLUÍDA" : prof.modalidade,
+                            style: TextStyle(
+                              color: isHistorico
+                                  ? Colors.grey.shade600
+                                  : const Color(0xFF0066F5),
                               fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -502,9 +515,12 @@ class _AulasScreenState extends State<AulasScreen> {
                     const SizedBox(height: 4),
                     Text(
                       prof.nome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: isHistorico
+                            ? Colors.black54
+                            : Colors.black, // Nome mais suave no histórico
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -584,126 +600,116 @@ class _AulasScreenState extends State<AulasScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 15),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    // Bloqueia o cancelamento se não tiver 24h de antecedência
-                    if (!_podeCancelar(data, hora)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "O cancelamento só é permitido com pelo menos 24 horas de antecedência.",
+          if (!isHistorico) ...[
+            const SizedBox(height: 15),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      // Bloqueia o cancelamento se não tiver 24h de antecedência
+                      if (!_podeCancelar(data, hora)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "O cancelamento só é permitido com pelo menos 24 horas de antecedência.",
+                            ),
+                            backgroundColor: Colors.red,
                           ),
-                          backgroundColor: Colors.red,
+                        );
+                        return;
+                      }
+                      _mostrarDialogoCancelamento(prof, data, hora);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      "Cancelar Aula",
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetalhesAulaScreen(
+                            professor: prof,
+                            data: data,
+                            hora: hora,
+                            reservaId: prof.id ?? 1,
+                          ),
                         ),
                       );
-                      return;
-                    }
 
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        title: const Text(
-                          "Cancelar Aula",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        content: const Text(
-                          "Você tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              "Voltar",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            onPressed: () async {
-                              Navigator.pop(context);
-
-                              await DBHelper.cancelarAula(prof.id!, data, hora);
-
-                              _carregarAulas();
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Aula cancelada com sucesso!"),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              "Sim, cancelar",
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
+                      _carregarAulas();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0066F5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text(
-                    "Cancelar Aula",
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    child: const Text(
+                      "Visualizar Detalhes",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetalhesAulaScreen(
-                          professor: prof,
-                          data: data,
-                          hora: hora,
-                          reservaId: prof.id ?? 1,
-                        ),
-                      ),
-                    );
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
-                    _carregarAulas();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0066F5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    "Visualizar Detalhes",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  void _mostrarDialogoCancelamento(Professor prof, String data, String hora) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text(
+          "Cancelar Aula",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "Você tem certeza que deseja cancelar este agendamento?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Voltar", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context);
+              await DBHelper.cancelarAula(prof.id!, data, hora);
+              _carregarAulas();
+            },
+            child: const Text(
+              "Sim, cancelar",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

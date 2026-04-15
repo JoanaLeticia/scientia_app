@@ -105,9 +105,7 @@ class DetalhesAulaScreen extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      professor.imagemUrl.isNotEmpty
-                          ? professor.imagemUrl
-                          : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
+                      professor.imagemUrl,
                       height: 60,
                       width: 60,
                       fit: BoxFit.cover,
@@ -115,6 +113,11 @@ class DetalhesAulaScreen extends StatelessWidget {
                         height: 60,
                         width: 60,
                         color: Colors.grey.shade300,
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.grey,
+                          size: 30,
+                        ),
                       ),
                     ),
                   ),
@@ -139,8 +142,8 @@ class DetalhesAulaScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          "(63) 98400-0000",
+                        Text(
+                          professor.contato,
                           style: TextStyle(
                             color: Color(0xFF0066F5),
                             fontSize: 13,

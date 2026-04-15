@@ -304,6 +304,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       height: 140,
                       width: 100,
                       color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),
