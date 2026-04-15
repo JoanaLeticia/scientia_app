@@ -7,6 +7,7 @@ class DBHelper {
   static Future<Database> getDatabase() async {
     final path = join(await getDatabasesPath(), 'professores.db');
 
+    // Criando o banco de dados e as tabelas necessárias
     return openDatabase(
       path,
       onCreate: (db, version) async {
@@ -21,7 +22,8 @@ class DBHelper {
           'cidadeEstado TEXT, '
           'modalidade TEXT, '
           'imagemUrl TEXT, '
-          'isFavorito INTEGER DEFAULT 0'
+          'isFavorito INTEGER DEFAULT 0,'
+          'isDestaque INTEGER DEFAULT 0'
           ')',
         );
 
@@ -53,6 +55,8 @@ class DBHelper {
           'modalidade': 'Presencial',
           'imagemUrl':
               'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=200&q=80',
+          'isFavorito': 1,
+          'isDestaque': 1,
         });
 
         await db.insert('professores', {
@@ -65,6 +69,8 @@ class DBHelper {
           'modalidade': 'Online',
           'imagemUrl':
               'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
+          'isFavorito': 0,
+          'isDestaque': 1,
         });
 
         await db.insert('professores', {
@@ -77,12 +83,15 @@ class DBHelper {
           'modalidade': 'Híbrido',
           'imagemUrl':
               'https://images.unsplash.com/photo-1580894732444-8ecbef79bd1e?auto=format&fit=crop&w=200&q=80',
+          'isFavorito': 0,
+          'isDestaque': 1,
         });
       },
       version: 1,
     );
   }
 
+  // Método para inserir um novo professor
   static Future<void> insert(Professor professor) async {
     final db = await getDatabase();
 
@@ -93,6 +102,7 @@ class DBHelper {
     );
   }
 
+  // Método para obter todos os professores
   static Future<List<Professor>> getAll() async {
     final db = await getDatabase();
 
@@ -101,6 +111,7 @@ class DBHelper {
     return maps.map((m) => Professor.fromMap(m)).toList();
   }
 
+  // Método para inserir um novo aluno
   static Future<void> insertAluno(Aluno aluno) async {
     final db = await getDatabase();
     await db.insert(
@@ -110,35 +121,7 @@ class DBHelper {
     );
   }
 
-  static Future<Aluno?> getAlunoPorEmail(String email, String senha) async {
-    final db = await getDatabase();
-    final List<Map<String, dynamic>> maps = await db.query(
-      'alunos',
-      where: 'email = ? AND senha = ?',
-      whereArgs: [email, senha],
-    );
-
-    if (maps.isNotEmpty) {
-      return Aluno.fromMap(maps.first);
-    }
-    return null;
-  }
-
-  static Future<void> provarCadastroNoConsole() async {
-    final db = await getDatabase();
-
-    final listaAlunos = await db.query('alunos');
-
-    print("\n=========================================");
-    print("LISTA DE ALUNOS CADASTRADOS:");
-    for (var aluno in listaAlunos) {
-      print(
-        "ID: ${aluno['id']} | Nome: ${aluno['nome']} | Email: ${aluno['email']}",
-      );
-    }
-    print("=========================================\n");
-  }
-
+  // Método para alternar o status de favorito de um professor
   static Future<void> toggleFavorito(int id, int statusAtual) async {
     final db = await getDatabase();
     int novoStatus = statusAtual == 0 ? 1 : 0;
@@ -151,6 +134,7 @@ class DBHelper {
     );
   }
 
+  // Método para obter apenas os professores favoritos
   static Future<List<Professor>> getFavoritos() async {
     final db = await getDatabase();
     final List<Map<String, dynamic>> maps = await db.query(
@@ -160,6 +144,7 @@ class DBHelper {
     return List.generate(maps.length, (i) => Professor.fromMap(maps[i]));
   }
 
+  // Método para inserir uma aula agendada
   static Future<void> insertAula(
     int professorId,
     String data,
@@ -173,6 +158,7 @@ class DBHelper {
     });
   }
 
+  // Método para obter todas as aulas agendadas, juntando com os dados dos professores
   static Future<List<Map<String, dynamic>>> getAulas() async {
     final db = await getDatabase();
     return await db.rawQuery('''
@@ -183,6 +169,7 @@ class DBHelper {
     ''');
   }
 
+  // Método para obter professores filtrados com base em múltiplos critérios
   static Future<List<Professor>> getProfessoresFiltrados({
     String busca = '',
     String ordem = 'Menor preço',
@@ -244,6 +231,7 @@ class DBHelper {
     return List.generate(maps.length, (i) => Professor.fromMap(maps[i]));
   }
 
+  // Método para cancelar uma aula específica
   static Future<void> cancelarAula(
     int professorId,
     String data,
@@ -256,5 +244,48 @@ class DBHelper {
       where: 'professor_id = ? AND data = ? AND hora = ?',
       whereArgs: [professorId, data, hora],
     );
+  }
+
+  // Método para obter os professores em destaque (isDestaque = 1)
+  static Future<List<Professor>> getProfessoresDestaque() async {
+    final db = await getDatabase();
+    final List<Map<String, dynamic>> maps = await db.query(
+      'professores',
+      where: 'isDestaque = 1',
+      limit: 5,
+    );
+    return List.generate(maps.length, (i) => Professor.fromMap(maps[i]));
+  }
+
+  // Método para obter os horários ocupados de um professor em uma data específica
+  static Future<List<String>> getHorariosOcupados(
+    int professorId,
+    String data,
+  ) async {
+    final db = await getDatabase();
+    final List<Map<String, dynamic>> maps = await db.query(
+      'aulas',
+      where: 'professor_id = ? AND data = ?',
+      whereArgs: [professorId, data],
+    );
+
+    List<String> ocupados = [];
+
+    for (var row in maps) {
+      String horaBanco = row['hora'];
+
+      var partes = horaBanco.split(' - ');
+      if (partes.length == 2) {
+        int inicio = int.parse(partes[0].split(':')[0]);
+        int fim = int.parse(partes[1].split(':')[0]);
+
+        for (int i = inicio; i < fim; i++) {
+          ocupados.add('${i.toString().padLeft(2, '0')}:00');
+        }
+      } else {
+        ocupados.add(horaBanco);
+      }
+    }
+    return ocupados;
   }
 }

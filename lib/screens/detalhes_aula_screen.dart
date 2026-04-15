@@ -269,6 +269,18 @@ class DetalhesAulaScreen extends StatelessWidget {
               height: 55,
               child: OutlinedButton(
                 onPressed: () {
+                  if (!_podeCancelar(data, hora)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "O cancelamento só é permitido com pelo menos 24 horas de antecedência.",
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -298,7 +310,11 @@ class DetalhesAulaScreen extends StatelessWidget {
                             Navigator.pop(context);
                             Navigator.pop(context);
 
-                            await DBHelper.cancelarAula(professor.id!, data, hora);
+                            await DBHelper.cancelarAula(
+                              professor.id!,
+                              data,
+                              hora,
+                            );
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -316,9 +332,7 @@ class DetalhesAulaScreen extends StatelessWidget {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: const Color(
-                    0xFFF5F6F8,
-                  ),
+                  backgroundColor: const Color(0xFFF5F6F8),
                   side: BorderSide(color: Colors.grey.shade300),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -338,6 +352,26 @@ class DetalhesAulaScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool _podeCancelar(String dataRaw, String horaRaw) {
+    try {
+      final dateParts = dataRaw.split('/');
+      final timeStr = horaRaw.split(' - ')[0].trim();
+      final timeParts = timeStr.split(':');
+
+      DateTime dataAula = DateTime(
+        int.parse(dateParts[2]),
+        int.parse(dateParts[1]),
+        int.parse(dateParts[0]),
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+      );
+
+      return dataAula.difference(DateTime.now()).inHours >= 24;
+    } catch (e) {
+      return false;
+    }
   }
 
   Widget _buildInfoRow(String label, String valor) {

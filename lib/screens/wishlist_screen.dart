@@ -146,7 +146,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Row(
                 children: [
-                  // Dropdown "Ordenar por"
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -197,7 +196,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                           onChanged: (novoValor) {
                             if (novoValor != null) {
                               setState(() => _ordemSelecionada = novoValor);
-                              _carregarProfessoresFavoritos(); // Refaz busca ao ordenar
+                              _carregarProfessoresFavoritos();
                             }
                           },
                         ),
@@ -269,13 +268,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
   // WIDGET DO CARD DE PROFESSOR (Manteve a lógica de remover da wishlist ao clicar no coração)
   Widget _buildPesquisaCard(Professor prof) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetalhesProfessorScreen(professor: prof),
           ),
         );
+
+        _carregarProfessoresFavoritos();
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),

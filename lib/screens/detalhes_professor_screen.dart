@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:scientia_app/screens/agendar_aula_screen.dart';
 import '../models/professor.dart';
+import '../database/db_helper.dart';
 
 class DetalhesProfessorScreen extends StatefulWidget {
   final Professor professor;
@@ -13,7 +14,13 @@ class DetalhesProfessorScreen extends StatefulWidget {
 }
 
 class _DetalhesProfessorScreenState extends State<DetalhesProfessorScreen> {
-  int horas = 1;
+  late bool _isFavoritoLocal;
+  
+  @override
+  void initState() {
+    super.initState();
+    _isFavoritoLocal = widget.professor.isFavorito == 1;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +51,29 @@ class _DetalhesProfessorScreenState extends State<DetalhesProfessorScreen> {
                       color: Colors.black87,
                     ),
                   ),
-                  const Icon(
-                    Icons.favorite_border,
-                    color: Color(0xFF0066F5),
-                    size: 24,
+                  GestureDetector(
+                    onTap: () async {
+                      int statusAtualNoBanco = _isFavoritoLocal ? 1 : 0;
+
+                      await DBHelper.toggleFavorito(
+                        widget.professor.id!,
+                        statusAtualNoBanco,
+                      );
+
+                      setState(() {
+                        _isFavoritoLocal = !_isFavoritoLocal;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        _isFavoritoLocal
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: const Color(0xFF0066F5),
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -213,73 +239,6 @@ class _DetalhesProfessorScreenState extends State<DetalhesProfessorScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Horas",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (horas > 1) {
-                        setState(() => horas--);
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFD9D9D9)),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.remove,
-                        size: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Text(
-                      '$horas',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() => horas++);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFD9D9D9)),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        size: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(width: 30),
 
           Expanded(
             child: ElevatedButton(

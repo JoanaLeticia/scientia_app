@@ -10,7 +10,15 @@ import 'notificacoes_screen.dart';
 import 'detalhes_professor_screen.dart';
 
 class PesquisaScreen extends StatefulWidget {
-  const PesquisaScreen({super.key});
+  final String? termoBuscaInicial;
+
+  final Map<String, dynamic>? filtrosIniciais;
+
+  const PesquisaScreen({
+    super.key,
+    this.termoBuscaInicial,
+    this.filtrosIniciais,
+  });
 
   @override
   State<PesquisaScreen> createState() => _PesquisaScreenState();
@@ -23,9 +31,36 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
   String _ordemSelecionada = 'Menor preço';
   Map<String, dynamic>? _filtrosAplicados;
 
+  late TextEditingController _buscaController;
+
+  int _contarFiltrosAtivos() {
+    if (_filtrosAplicados == null) return 0;
+
+    int contador = 0;
+    if (_filtrosAplicados!['disciplina'] != null) contador++;
+    if (_filtrosAplicados!['tipoAula'] != null) contador++;
+    if (_filtrosAplicados!['precoMin'] != null &&
+        _filtrosAplicados!['precoMin'].toString().isNotEmpty)
+      contador++;
+    if (_filtrosAplicados!['precoMax'] != null &&
+        _filtrosAplicados!['precoMax'].toString().isNotEmpty)
+      contador++;
+    if (_filtrosAplicados!['cidade'] != null &&
+        _filtrosAplicados!['cidade'].toString().isNotEmpty)
+      contador++;
+
+    return contador;
+  }
+
   @override
   void initState() {
     super.initState();
+
+    _textoBusca = widget.termoBuscaInicial ?? '';
+    _buscaController = TextEditingController(text: _textoBusca);
+
+    _filtrosAplicados = widget.filtrosIniciais;
+
     _carregarProfessores();
   }
 
@@ -104,6 +139,7 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: TextField(
+                controller: _buscaController,
                 onChanged: (valor) {
                   setState(() => _textoBusca = valor);
                   _carregarProfessores();
@@ -198,24 +234,66 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
                   Expanded(
                     child: SizedBox(
                       height: 45,
-                      child: OutlinedButton.icon(
-                        onPressed:
-                            _abrirTelaFiltros,
-                        icon: const Icon(
-                          Icons.filter_list,
-                          color: Colors.black87,
-                          size: 20,
-                        ),
-                        label: const Text(
-                          "Filtros",
-                          style: TextStyle(color: Colors.black87, fontSize: 14),
-                        ),
+                      child: OutlinedButton(
+                        onPressed: _abrirTelaFiltros,
                         style: OutlinedButton.styleFrom(
                           backgroundColor: Colors.white,
-                          side: BorderSide(color: Colors.grey.shade300),
+                          // Se tem filtro, a borda fica azul. Se não, fica cinza.
+                          side: BorderSide(
+                            color: _contarFiltrosAtivos() > 0
+                                ? const Color(0xFF0066F5)
+                                : Colors.grey.shade300,
+                            width: _contarFiltrosAtivos() > 0 ? 1.5 : 1.0,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          padding: EdgeInsets
+                              .zero, // Importante para centralizar o conteúdo
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              color: _contarFiltrosAtivos() > 0
+                                  ? const Color(0xFF0066F5)
+                                  : Colors.black87,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Filtros",
+                              style: TextStyle(
+                                color: _contarFiltrosAtivos() > 0
+                                    ? const Color(0xFF0066F5)
+                                    : Colors.black87,
+                                fontSize: 14,
+                                fontWeight: _contarFiltrosAtivos() > 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            // 🌟 A MÁGICA DA BOLINHA ACONTECE AQUI!
+                            if (_contarFiltrosAtivos() > 0) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0066F5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  _contarFiltrosAtivos().toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
@@ -258,13 +336,15 @@ class _PesquisaScreenState extends State<PesquisaScreen> {
 
   Widget _buildPesquisaCard(Professor prof) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async{
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetalhesProfessorScreen(professor: prof),
           ),
         );
+
+        _carregarProfessores();
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),

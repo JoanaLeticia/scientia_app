@@ -43,8 +43,6 @@ class _CadastroAlunoScreenState extends State<CadastroAlunoScreen> {
 
     await DBHelper.insertAluno(novoAluno);
 
-    await DBHelper.provarCadastroNoConsole();
-
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

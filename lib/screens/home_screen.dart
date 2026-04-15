@@ -17,6 +17,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Professor> _listaProfessores = [];
+  List<Professor> _listaDestaques = [];
+
+  final TextEditingController _buscaController = TextEditingController();
 
   @override
   void initState() {
@@ -25,8 +28,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _atualizarLista() async {
-    final dados = await DBHelper.getAll();
-    setState(() => _listaProfessores = dados);
+    final destaques = await DBHelper.getProfessoresDestaque();
+    final todos = await DBHelper.getAll();
+
+    setState(() {
+      _listaDestaques = destaques;
+      _listaProfessores = todos;
+    });
   }
 
   @override
@@ -89,25 +97,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Pesquisar professores...",
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: Color(0xFF0066F5),
-                      size: 26,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _buscaController,
+                        onSubmitted: (valor) => _irParaPesquisa(),
+                        decoration: InputDecoration(
+                          hintText: "Pesquisar professores...",
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF0066F5),
+                            size: 26,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF0066F5),
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    const SizedBox(width: 10),
+
+                    GestureDetector(
+                      onTap: _irParaPesquisa,
+                      child: Container(
+                        height: 55,
+                        width: 55,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0066F5),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),
@@ -115,21 +154,24 @@ class _HomeScreenState extends State<HomeScreen> {
               // SEÇAO DE PROFESSORES DESTAQUES
               SizedBox(
                 height: 224,
-                child: _listaProfessores.isEmpty
-                    ? const Center(child: Text("Carregando destaques..."))
+                child:
+                    _listaDestaques
+                        .isEmpty
+                    ? const Center(
+                        child: Text(
+                          "Nenhum destaque no momento.",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
                     : ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        itemCount: _listaProfessores.length,
+                        itemCount: _listaDestaques
+                            .length,
                         itemBuilder: (context, index) {
-                          final prof = _listaProfessores[index];
-                          return _buildDestaqueCard(
-                            prof.disciplina,
-                            prof.valor.toStringAsFixed(0),
-                            prof.imagemUrl.isNotEmpty
-                                ? prof.imagemUrl
-                                : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
-                          );
+                          final prof =
+                              _listaDestaques[index];
+                          return _buildDestaqueCard(prof);
                         },
                       ),
               ),
@@ -176,20 +218,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       "Professores Disponíveis",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      "Ver todos",
-                      style: TextStyle(
-                        color: Color(0xFF0066F5),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                    // 🌟 MUDANÇA: Adicionado GestureDetector para navegação
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PesquisaScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Ver todos",
+                        style: TextStyle(
+                          color: Color(0xFF0066F5),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -292,99 +345,171 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDestaqueCard(String disciplina, String preco, String imageUrl) {
-    return Container(
-      width: 145,
-      margin: const EdgeInsets.only(right: 10),
-      padding: const EdgeInsets.only(left: 10, top: 10, right: 10, bottom: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              width: 125,
-              height: 155,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 155,
-                width: 125,
-                color: Colors.grey.shade200,
-                child: const Icon(Icons.person, color: Colors.grey, size: 40),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 3, top: 7),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  disciplina,
-                  style: const TextStyle(fontSize: 14, color: Colors.black87),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 1),
-
-                RichText(
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                    children: [
-                      TextSpan(
-                        text: 'R\$$preco',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const TextSpan(text: '/hora'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  void _irParaPesquisa() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            PesquisaScreen(termoBuscaInicial: _buscaController.text),
       ),
     );
   }
 
-  Widget _buildCategoriaIcon(IconData icon, String titulo) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: Color(0xFFE0EDFF),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Color(0xFF0066F5), size: 30),
-        ),
-        const SizedBox(height: 8),
-        Text(titulo, style: const TextStyle(fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildProfessorCard(Professor prof) {
+  Widget _buildDestaqueCard(Professor prof) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetalhesProfessorScreen(professor: prof),
           ),
         );
+        _atualizarLista();
+      },
+      child: Container(
+        width: 145,
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🌟 STACK: Imagem + Coração de Favorito
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    prof.imagemUrl.isNotEmpty
+                        ? prof.imagemUrl
+                        : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+                    width: 125,
+                    height: 155,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 155,
+                      width: 125,
+                      color: Colors.grey.shade200,
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.grey,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 5,
+                  left: 5,
+                  child: GestureDetector(
+                    onTap: () async {
+                      // 1. Altera no banco SQLite
+                      await DBHelper.toggleFavorito(prof.id!, prof.isFavorito);
+                      // 2. Atualiza a Home (Corações mudam de cor em toda a tela)
+                      _atualizarLista();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        prof.isFavorito == 1
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: const Color(0xFF0066F5),
+                        size:
+                            16, // Um pouco menor para caber no card de destaque
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 3, top: 7),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    prof.disciplina,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 1),
+                  RichText(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    text: TextSpan(
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'R\$${prof.valor.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const TextSpan(text: '/hora'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoriaIcon(IconData icon, String titulo) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                PesquisaScreen(filtrosIniciais: {'disciplina': titulo}),
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE0EDFF),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: const Color(0xFF0066F5), size: 30),
+          ),
+          const SizedBox(height: 8),
+          Text(titulo, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfessorCard(Professor prof) {
+    return GestureDetector(
+      onTap: () async{
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetalhesProfessorScreen(professor: prof),
+          ),
+        );
+        _atualizarLista();
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
@@ -508,14 +633,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
                                 DetalhesProfessorScreen(professor: prof),
                           ),
                         );
+                        _atualizarLista();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0066F5),

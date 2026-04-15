@@ -9,6 +9,7 @@ class Professor {
   final String modalidade;
   final String imagemUrl;
   final int isFavorito;
+  final int isDestaque;
 
   Professor({
     this.id,
@@ -20,7 +21,8 @@ class Professor {
     required this.cidadeEstado,
     required this.modalidade,
     required this.imagemUrl,
-    this.isFavorito = 0
+    this.isFavorito = 0,
+    this.isDestaque = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -34,7 +36,8 @@ class Professor {
       'cidadeEstado': cidadeEstado,
       'modalidade': modalidade,
       'imagemUrl': imagemUrl,
-      'isFavorito': isFavorito
+      'isFavorito': isFavorito,
+      'isDestaque': isDestaque,
     };
   }
 
@@ -50,6 +53,7 @@ class Professor {
       modalidade: map['modalidade'] ?? '',
       imagemUrl: map['imagemUrl'] ?? '',
       isFavorito: map['isFavorito'] ?? 0,
+      isDestaque: map['isDestaque'] ?? 0,
     );
   }
 }

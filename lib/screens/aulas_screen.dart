@@ -414,6 +414,26 @@ class _AulasScreenState extends State<AulasScreen> {
     );
   }
 
+  bool _podeCancelar(String dataRaw, String horaRaw) {
+    try {
+      final dateParts = dataRaw.split('/');
+      final timeStr = horaRaw.split(' - ')[0].trim();
+      final timeParts = timeStr.split(':');
+
+      DateTime dataAula = DateTime(
+        int.parse(dateParts[2]),
+        int.parse(dateParts[1]),
+        int.parse(dateParts[0]),
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+      );
+
+      return dataAula.difference(DateTime.now()).inHours >= 24;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Widget _buildAulaCard(Professor prof, String data, String hora) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -570,6 +590,19 @@ class _AulasScreenState extends State<AulasScreen> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
+                    // Bloqueia o cancelamento se não tiver 24h de antecedência
+                    if (!_podeCancelar(data, hora)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "O cancelamento só é permitido com pelo menos 24 horas de antecedência.",
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -601,7 +634,7 @@ class _AulasScreenState extends State<AulasScreen> {
                               await DBHelper.cancelarAula(prof.id!, data, hora);
 
                               _carregarAulas();
-                              
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text("Aula cancelada com sucesso!"),
@@ -637,8 +670,8 @@ class _AulasScreenState extends State<AulasScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => DetalhesAulaScreen(
@@ -649,6 +682,8 @@ class _AulasScreenState extends State<AulasScreen> {
                         ),
                       ),
                     );
+
+                    _carregarAulas();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0066F5),
